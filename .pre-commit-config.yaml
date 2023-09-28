@@ -1,0 +1,73 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+  - id: check-added-large-files
+  - id: check-merge-conflict
+  - id: check-toml
+  - id: debug-statements
+- repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+  rev: 0.2.3
+  hooks:
+  - id: yamlfmt
+    args:
+    - --mapping
+    - '2'
+    - --sequence
+    - '2'
+    - --offset
+    - '0'
+    - --width
+    - '80'
+    - --preserve-quotes
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.32.0
+  hooks:
+  - id: yamllint
+    args: [--format, parsable, -d, relaxed]
+- repo: https://github.com/Yelp/detect-secrets
+  rev: v1.4.0
+  hooks:
+  - id: detect-secrets
+    args:
+    - --exclude-lines
+    - '(^encryptedkey:|^secure:|^secretsprovider:)'
+    - --exclude-files
+    - src/bridge/secrets/
+    - --exclude-files
+    - poetry.lock
+    - --exclude-files
+    - src/ol_infrastructure/applications/ocw_site/redirect_dict
+- repo: https://github.com/psf/black
+  rev: 23.9.1
+  hooks:
+  - id: black
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: 'v0.0.290'
+  hooks:
+  - id: ruff
+    args: [--extend-ignore=D1, --fix]
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.5.1
+  hooks:
+  - id: mypy
+    args:
+    - --explicit-package-bases
+    - --namespace-packages
+    - --config-file=pyproject.toml
+    - --warn-unused-configs
+    additional_dependencies:
+    - pydantic>1
+    - types-PyYAML
+    - types-requests
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.9.0.5
+  hooks:
+  - id: shellcheck
