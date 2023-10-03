@@ -1,6 +1,13 @@
 from concoursetools.additional import ConcourseResource  # type: ignore
+from concoursetools.version import TypedVersion  # type: ignore
 from github import Github, Auth  # type: ignore
 from os import environ
+from datetime import datetime
+
+
+class ConcourseGithubIssuesVersion(TypedVersion):
+    issue_title: str
+    issue_dt: datetime
 
 
 class ConcourseGithubIssuesResource(ConcourseResource):
