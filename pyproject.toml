@@ -1,10 +1,11 @@
 [tool.poetry]
-name = "ol-concourse-github-issues"
+name = "ol_concourse_github_issues"
 version = "0.1.0"
 description = "concourse.io resource for manipulating Github Issues"
 authors = ["Chris Patti <feoh@feoh.org>"]
 license = "MIT"
 readme = "README.md"
+packages = [{include = "ol_concourse_github_issues"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
