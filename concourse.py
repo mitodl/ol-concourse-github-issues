@@ -40,3 +40,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         else:
             self.found_pipeline_issues = matching_issues
             return self.found_pipeline_issues
+
+    def download_version(self, version, destination_dir, build_metadata):
+        pass
+
+    def publish_new_version(self, sources_dir, build_metadata):
+        pass
