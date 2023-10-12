@@ -21,9 +21,9 @@ class ConcourseGithubIssuesVersion(TypedVersion):
 
 
 class ConcourseGithubIssuesResource(ConcourseResource):
-    def __init__(self, github_auth_token, repo, issue_title_prefix):
+    def __init__(self, access_token, repo, issue_title_prefix):
         super().__init__(ConcourseGithubIssuesVersion)
-        self.gh = Github(auth=github_auth_token)
+        self.gh = Github(auth=access_token)
         self.repo = self.gh.get_repo(repo)
         self.issue_title_prefix = issue_title_prefix
         self.found_pipeline_issues = []
