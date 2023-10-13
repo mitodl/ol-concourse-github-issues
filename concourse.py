@@ -10,7 +10,7 @@ resources:
 """
 from concoursetools.additional import ConcourseResource  # type: ignore
 from concoursetools.version import TypedVersion  # type: ignore
-from github import Github  # type: ignore
+from github import Github, Auth  # type: ignore
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -23,7 +23,7 @@ class ConcourseGithubIssuesVersion(TypedVersion):
 class ConcourseGithubIssuesResource(ConcourseResource):
     def __init__(self, access_token, repository, issue_prefix):
         super().__init__(ConcourseGithubIssuesVersion)
-        self.gh = Github(auth=access_token)
+        self.gh = Github(auth=Auth.Token(access_token))
         self.repo = self.gh.get_repo(repository)
         self.issue_prefix = issue_prefix
         self.found_pipeline_issues = []
