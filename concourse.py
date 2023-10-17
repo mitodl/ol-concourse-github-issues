@@ -33,7 +33,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         matching_issues = [
             issue
             for issue in all_pipeline_issues
-            if issue.title.startswith(self.issue_title_prefix)
+            if issue.title.startswith(self.issue_prefix)
         ]
         if matching_issues in self.found_pipeline_issues:
             return [previous_version]
