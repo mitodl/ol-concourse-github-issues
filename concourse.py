@@ -14,17 +14,24 @@ import json
 from typing import Literal, Optional
 from concoursetools import BuildMetadata, ConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth, Issue
+from github import Github, Auth
+from github.Issue import Issue
 
 
 class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
     def __init__(
-        self, issue_number: int, issue_title: str, issue_state, issue_created_at: str
+        self,
+        issue_created_at: str,
+        issue_number: int,
+        issue_state: Literal["open", "closed"],
+        issue_title: str,
+        issue_url: str,
     ):
-        self.issue_number = issue_number
-        self.issue_title = issue_title
         self.issue_created_at = issue_created_at
+        self.issue_number = issue_number
         self.issue_state = issue_state
+        self.issue_title = issue_title
+        self.issue_url = issue_url
 
     def __lt__(self, other: "ConcourseGithubIssuesVersion"):
         return self.issue_number > other.issue_number
@@ -45,7 +52,6 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         Pipeline: {BUILD_PIPELINE_NAME}
         Build ID: {BUILD_ID}
         Job: {BUILD_JOB_NAME}
-        URL: {BUILD_URL}
         """
         ),
     ):
@@ -66,6 +72,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             issue_title=gh_issue.title,
             issue_state=gh_issue.state,
             issue_created_at=gh_issue.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            issue_url=gh_issue.url,
         )
 
     def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
@@ -111,4 +118,4 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             labels=labels or [],
             body=self.issue_body_template.format(**build_metadata.__dict__),
         )
-        return self._to_version(new_issue)
+        return self._to_version(new_issue), {}
