@@ -25,7 +25,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
     def __init__(
         self,
         issue_created_at: str,
-        issue_closed_at: str,
+        issue_closed_at: Optional[str],
         issue_number: int,
         issue_state: Literal["open", "closed"],
         issue_title: str,
@@ -39,9 +39,16 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
         self.issue_closed_at = issue_closed_at
 
     def __lt__(self, other: "ConcourseGithubIssuesVersion"):
-        return datetime.strptime(
-            ISO_8601_FORMAT, self.issue_closed_at
-        ) < datetime.strptime(ISO_8601_FORMAT, other.issue_closed_at)
+        if self.issue_state == "closed":
+            return datetime.strptime(
+                ISO_8601_FORMAT, self.issue_closed_at  # type: ignore[arg-type]
+            ) < datetime.strptime(
+                ISO_8601_FORMAT, other.issue_closed_at  # type: ignore[arg-type]
+            )
+        else:
+            return datetime.strptime(
+                ISO_8601_FORMAT, self.issue_created_at
+            ) < datetime.strptime(ISO_8601_FORMAT, other.issue_created_at)
 
 
 class ConcourseGithubIssuesResource(ConcourseResource):
@@ -74,13 +81,17 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         self.issue_body_template = issue_body_template
 
     def _to_version(self, gh_issue: Issue) -> ConcourseGithubIssuesVersion:
+        if gh_issue.state == "closed":
+            issue_closed_time = gh_issue.closed_at.strftime(ISO_8601_FORMAT)
+        else:
+            issue_closed_time = None
         return ConcourseGithubIssuesVersion(
             issue_number=gh_issue.number,
             issue_title=gh_issue.title,
             issue_state=gh_issue.state,
             issue_created_at=gh_issue.created_at.strftime(ISO_8601_FORMAT),
             issue_url=gh_issue.url,
-            issue_closed_at=gh_issue.closed_at.strftime(ISO_8601_FORMAT),
+            issue_closed_at=issue_closed_time,
         )
 
     def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
@@ -105,7 +116,6 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             for issue in sorted_issues
             if issue.number > previous_issue_number
         ]
-        print(previous_version, new_versions, list(all_pipeline_issues))
         return new_versions or [previous_version]
 
     def download_version(self, version, destination_dir, build_metadata):
