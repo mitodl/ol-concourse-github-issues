@@ -64,10 +64,8 @@ repos:
     - --namespace-packages
     - --config-file=pyproject.toml
     - --warn-unused-configs
-    additional_dependencies:
-    - pydantic>1
-    - types-PyYAML
-    - types-requests
+    - --install-types
+    - --non-interactive
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.9.0.5
   hooks:
