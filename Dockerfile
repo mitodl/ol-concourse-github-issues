@@ -1,5 +1,4 @@
 FROM python:3.11-slim-bookworm
-LABEL mitodl/ol-concourse-github-issues
 RUN mkdir -p /opt/resource/ && useradd -b /opt/resource/ -s /bin/false -M app && chown -R app:app /opt/resource
 COPY requirements.txt requirements.txt
 
