@@ -38,7 +38,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
 
     def fetch_new_versions(self, previous_version=None):
         all_pipeline_issues = self.repo.get_issues(
-            state="open", labels=self.issue_labels
+            state="open", labels=self.issue_labels or []
         )
         matching_issues = [
             issue
