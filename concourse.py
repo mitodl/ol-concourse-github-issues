@@ -11,17 +11,21 @@ resources:
 from pathlib import Path
 import textwrap
 import json
+from datetime import datetime
 from typing import Literal, Optional
 from concoursetools import BuildMetadata, ConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth
 from github.Issue import Issue
 
+ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
 
 class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
     def __init__(
         self,
         issue_created_at: str,
+        issue_closed_at: str,
         issue_number: int,
         issue_state: Literal["open", "closed"],
         issue_title: str,
@@ -32,9 +36,12 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
         self.issue_state = issue_state
         self.issue_title = issue_title
         self.issue_url = issue_url
+        self.issue_closed_at = issue_closed_at
 
     def __lt__(self, other: "ConcourseGithubIssuesVersion"):
-        return self.issue_number > other.issue_number
+        return datetime.strptime(
+            ISO_8601_FORMAT, self.issue_closed_at
+        ) < datetime.strptime(ISO_8601_FORMAT, other.issue_closed_at)
 
 
 class ConcourseGithubIssuesResource(ConcourseResource):
@@ -71,8 +78,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             issue_number=gh_issue.number,
             issue_title=gh_issue.title,
             issue_state=gh_issue.state,
-            issue_created_at=gh_issue.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            issue_created_at=gh_issue.created_at.strftime(ISO_8601_FORMAT),
             issue_url=gh_issue.url,
+            issue_closed_at=gh_issue.closed_at.strftime(ISO_8601_FORMAT),
         )
 
     def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
