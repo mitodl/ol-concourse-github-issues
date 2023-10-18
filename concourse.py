@@ -10,7 +10,7 @@ resources:
 """
 from concoursetools.additional import ConcourseResource  # type: ignore
 from concoursetools.version import TypedVersion  # type: ignore
-from github import Github, Auth, enable_console_debug_logging  # type: ignore
+from github import Github, Auth  # type: ignore
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -22,7 +22,6 @@ class ConcourseGithubIssuesVersion(TypedVersion):
 
 class ConcourseGithubIssuesResource(ConcourseResource):
     def __init__(self, access_token, repository, issue_prefix):
-        enable_console_debug_logging()
         super().__init__(ConcourseGithubIssuesVersion)
         print(f"ConcourseGithubIssuesResource:init: {repository=}")
         print(f"ConcourseGithubIssuesResource:init: {issue_prefix=}")
