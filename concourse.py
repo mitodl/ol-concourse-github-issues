@@ -8,8 +8,11 @@ resources:
       repo: "mitodl/my-project"
 
 """
+from pathlib import Path
+import textwrap
+import json
 from typing import Literal, Optional
-from concoursetools import ConcourseResource
+from concoursetools import BuildMetadata, ConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth, Issue
 
@@ -24,7 +27,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
         self.issue_state = issue_state
 
     def __lt__(self, other: "ConcourseGithubIssuesVersion"):
-        return self.issue_number < other.issue_number
+        return self.issue_number > other.issue_number
 
 
 class ConcourseGithubIssuesResource(ConcourseResource):
@@ -35,6 +38,16 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         issue_state: Literal["open", "closed"] = "closed",
         issue_prefix: Optional[str] = None,
         labels: Optional[list[str]] = None,
+        assignees: Optional[list[str]] = None,
+        issue_title_template: str = "[bot] Pipeline task completed",
+        issue_body_template: str = textwrap.dedent(
+            """\
+        Pipeline: {BUILD_PIPELINE_NAME}
+        Build ID: {BUILD_ID}
+        Job: {BUILD_JOB_NAME}
+        URL: {BUILD_URL}
+        """
+        ),
     ):
         super().__init__(ConcourseGithubIssuesVersion)
         self.gh = Github(auth=Auth.Token(access_token))
@@ -43,8 +56,11 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         self.issue_prefix = issue_prefix
         self.found_pipeline_issues: list[Issue] = []
         self.issue_labels = labels
+        self.assignees = assignees
+        self.issue_title_template = issue_title_template
+        self.issue_body_template = issue_body_template
 
-    def _to_version(self, gh_issue: Issue):
+    def _to_version(self, gh_issue: Issue) -> ConcourseGithubIssuesVersion:
         return ConcourseGithubIssuesVersion(
             issue_number=gh_issue.number,
             issue_title=gh_issue.title,
@@ -52,8 +68,8 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             issue_created_at=gh_issue.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
-    def _from_version(self, version: ConcourseGithubIssuesVersion):
-        return self.repo.get_issue(version.issue_number)
+    def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
+        return self.repo.get_issue(int(version.issue_number))
 
     def fetch_new_versions(self, previous_version=None):
         all_pipeline_issues = self.repo.get_issues(
@@ -62,16 +78,37 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         matching_issues = [
             issue
             for issue in all_pipeline_issues
-            if issue.title.startswith(self.issue_prefix)
+            if issue.title.startswith(self.issue_prefix or "")
         ]
-        if matching_issues in self.found_pipeline_issues:
-            return [previous_version]
-        else:
-            self.found_pipeline_issues = matching_issues
-            return [self._to_version(issue) for issue in self.found_pipeline_issues]
+        sorted_issues = sorted(matching_issues, key=lambda issue: issue.number)
+        try:
+            previous_issue_number = previous_version.number
+        except AttributeError:
+            previous_issue_number = 0
+        new_versions = [
+            self._to_version(issue)
+            for issue in sorted_issues
+            if issue.number > previous_issue_number
+        ]
+        print(previous_version, new_versions, list(all_pipeline_issues))
+        return new_versions or [previous_version]
 
     def download_version(self, version, destination_dir, build_metadata):
-        pass
+        with Path(destination_dir).joinpath("gh_issue.json").open("w") as issue_file:
+            issue_file.write(json.dumps(version.to_flat_dict()))
+        return version, {}
 
-    def publish_new_version(self, sources_dir, build_metadata):
-        pass
+    def publish_new_version(
+        self,
+        sources_dir,
+        build_metadata: BuildMetadata,
+        assignees: Optional[list[str]] = None,
+        labels: Optional[list[str]] = None,
+    ):
+        new_issue = self.repo.create_issue(
+            title=self.issue_title_template.format(**build_metadata.__dict__),
+            assignees=assignees or [],
+            labels=labels or [],
+            body=self.issue_body_template.format(**build_metadata.__dict__),
+        )
+        return self._to_version(new_issue)
