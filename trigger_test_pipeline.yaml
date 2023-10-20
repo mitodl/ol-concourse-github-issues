@@ -1,0 +1,43 @@
+---
+jobs:
+- max_in_flight: 1
+  name: run-github-issue-integ
+  plan:
+  - get: test_pipeline_issues
+    trigger: true
+  - config:
+      image_resource:
+        name: ""
+        source:
+          repository: busybox
+          tag: latest
+        type: registry-image
+      platform: linux
+      run:
+        args:
+        - Hello, World!
+        path: echo
+  #   task: github-issues-task
+  # - put: test_pipeline_issues
+  #   params:
+  #     assignees:
+  #     - feoh
+  #     - blarghmatey
+  #     labels:
+  #     - "product:infrastructure"
+
+resource_types:
+- name: github-issues
+  source:
+    repository: mitodl/ol-concourse-github-issues
+    tag: latest
+  type: registry-image
+resources:
+- check_every: 24h0m0s
+  icon: github
+  name: test_pipeline_issues
+  source:
+    access_token: ((github.issues_resource_access_token))
+    issue_prefix: CONCOURSE
+    repository: mitodl/concourse-workflow
+  type: github-issues

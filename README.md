@@ -17,3 +17,9 @@ issue_prefix: prefix issue titles must contain to match.
 labels: labels required to match.
 assignees: optional assignees list to use when creating issues
 ```
+
+You can find example pipeline definitions for:
+
+- [Triggering a task when a Github issue is created](trigger_test_pipeline.yaml)
+- [Creating a New Github Issue When A Task
+Completes](issue_create_test_pipeline.yaml)
