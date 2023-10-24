@@ -97,15 +97,22 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
         return self.repo.get_issue(int(version.issue_number))
 
-    def fetch_new_versions(self, previous_version=None):
-        all_pipeline_issues = self.repo.get_issues(
+    def get_all_issues(self):
+        return self.repo.get_issues(
             state=self.issue_state, labels=self.issue_labels or []
         )
-        matching_issues = [
+
+    def get_matching_issues(self):
+        all_pipeline_issues = self.get_all_issues()
+
+        return [
             issue
             for issue in all_pipeline_issues
             if issue.title.startswith(self.issue_prefix or "")
         ]
+
+    def fetch_new_versions(self, previous_version=None):
+        matching_issues = self.get_matching_issues()
         sorted_issues = sorted(matching_issues, key=lambda issue: issue.number)
         try:
             previous_issue_number = previous_version.number
