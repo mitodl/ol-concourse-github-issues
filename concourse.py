@@ -102,6 +102,11 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             state=self.issue_state, labels=self.issue_labels or []
         )
 
+    def get_exact_title_match(self, title: str):
+        all_pipeline_issues = self.get_all_issues()
+
+        return [issue for issue in all_pipeline_issues if (issue.title == title or "")]
+
     def get_matching_issues(self):
         all_pipeline_issues = self.get_all_issues()
 
@@ -130,6 +135,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             issue_file.write(json.dumps(version.to_flat_dict()))
         return version, {}
 
+    def get_title_from_build(self, build_metadata):
+        return self.issue_title_template.format(**build_metadata.__dict__)
+
     def publish_new_version(
         self,
         sources_dir,
@@ -137,10 +145,25 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         assignees: Optional[list[str]] = None,
         labels: Optional[list[str]] = None,
     ):
-        new_issue = self.repo.create_issue(
-            title=self.issue_title_template.format(**build_metadata.__dict__),
-            assignees=assignees or [],
-            labels=labels or [],
-            body=self.issue_body_template.format(**build_metadata.__dict__),
-        )
-        return self._to_version(new_issue), {}
+        # Assume that: title is enough uniqueness to discern whether the issue
+        # already exists
+
+        candidate_issue_title = self.get_title_from_build(build_metadata)
+
+        already_exists = self.get_exact_title_match(candidate_issue_title)
+
+        if not already_exists:
+            working_issue = self.repo.create_issue(
+                title=candidate_issue_title,
+                assignees=assignees or [],
+                labels=labels or [],
+                body=self.issue_body_template.format(**build_metadata.__dict__),
+            )
+        else:
+            working_issue = already_exists[0]
+            comment_body = f"{build_metadata.BUILD_NAME} run by "
+            f"{build_metadata.BUILD_CREATED_BY} failed. See "
+            f"{build_metadata.build_url()} for details."
+            working_issue.create_comment(comment_body)
+
+        return self._to_version(working_issue), {}
