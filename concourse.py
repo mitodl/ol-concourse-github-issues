@@ -41,9 +41,11 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
     def __lt__(self, other: "ConcourseGithubIssuesVersion"):
         if self.issue_state == "closed":
             return datetime.strptime(
-                ISO_8601_FORMAT, self.issue_closed_at  # type: ignore[arg-type]
+                ISO_8601_FORMAT,
+                self.issue_closed_at,  # type: ignore[arg-type]
             ) < datetime.strptime(
-                ISO_8601_FORMAT, other.issue_closed_at  # type: ignore[arg-type]
+                ISO_8601_FORMAT,
+                other.issue_closed_at,  # type: ignore[arg-type]
             )
         else:
             return datetime.strptime(
@@ -161,9 +163,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             )
         else:
             working_issue = already_exists[0]
-            comment_body = f"{build_metadata.BUILD_NAME} run by "
-            f"{build_metadata.BUILD_CREATED_BY} failed. See "
-            f"{build_metadata.build_url()} for details."
+            comment_body = (
+                f"Build failed. See {build_metadata.build_url()} for details."
+            )
             working_issue.create_comment(comment_body)
 
         return self._to_version(working_issue), {}
