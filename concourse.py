@@ -120,6 +120,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
 
     def fetch_new_versions(self, previous_version=None):
         matching_issues = self.get_matching_issues()
+        print(f"fetch_new_versions: {matching_issues=}")
         sorted_issues = sorted(matching_issues, key=lambda issue: issue.number)
         try:
             previous_issue_number = previous_version.number
@@ -151,8 +152,10 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         # already exists
 
         candidate_issue_title = self.get_title_from_build(build_metadata)
+        print(f"publish_new_version: {candidate_issue_title=}")
 
         already_exists = self.get_exact_title_match(candidate_issue_title)
+        print(f"publish_new_version: {already_exists=}")
 
         if not already_exists:
             working_issue = self.repo.create_issue(
