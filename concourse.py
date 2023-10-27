@@ -112,7 +112,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         return [
             issue
             for issue in all_pipeline_issues
-            if (issue.title == title or "") and (state == state)
+            if (issue.title == title or "") and (issue.state == state)
         ]
 
     def get_matching_issues(self):
@@ -159,8 +159,8 @@ class ConcourseGithubIssuesResource(ConcourseResource):
 
         candidate_issue_title = self.get_title_from_build(build_metadata)
         print(f"publish_new_version: {candidate_issue_title=}")
-        print(f"publish_new_version: {labels}")
-        print(f"publish_new_version: {assignees}")
+        print(f"publish_new_version: {labels=}")
+        print(f"publish_new_version: {assignees=}")
 
         already_exists = self.get_exact_title_match(candidate_issue_title, state="open")
         print(f"publish_new_version: {already_exists=}")
