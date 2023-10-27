@@ -104,10 +104,16 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             state=self.issue_state, labels=self.issue_labels or []
         )
 
-    def get_exact_title_match(self, title: str):
+    def get_exact_title_match(
+        self, title: str, state: Literal["open", "closed"]
+    ) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
 
-        return [issue for issue in all_pipeline_issues if (issue.title == title or "")]
+        return [
+            issue
+            for issue in all_pipeline_issues
+            if (issue.title == title or "") and (state == state)
+        ]
 
     def get_matching_issues(self):
         all_pipeline_issues = self.get_all_issues()
@@ -153,8 +159,10 @@ class ConcourseGithubIssuesResource(ConcourseResource):
 
         candidate_issue_title = self.get_title_from_build(build_metadata)
         print(f"publish_new_version: {candidate_issue_title=}")
+        print(f"publish_new_version: {labels}")
+        print(f"publish_new_version: {assignees}")
 
-        already_exists = self.get_exact_title_match(candidate_issue_title)
+        already_exists = self.get_exact_title_match(candidate_issue_title, state="open")
         print(f"publish_new_version: {already_exists=}")
 
         if not already_exists:
