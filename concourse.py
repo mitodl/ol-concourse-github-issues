@@ -62,12 +62,13 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         issue_prefix: Optional[str] = None,
         labels: Optional[list[str]] = None,
         assignees: Optional[list[str]] = None,
-        issue_title_template: str = "[bot] Pipeline task completed",
+        issue_title_template: str = "[bot] Pipeline {BUILD_PIPELINE_NAME} task {BUILD_JOB_NAME} completed",
         issue_body_template: str = textwrap.dedent(
             """\
         Pipeline: {BUILD_PIPELINE_NAME}
         Build ID: {BUILD_ID}
         Job: {BUILD_JOB_NAME}
+        Build URL: {BUILD_URL}
         """
         ),
     ):
@@ -109,11 +110,12 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     ) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
 
-        return [
+        unsorted = [
             issue
             for issue in all_pipeline_issues
             if (issue.title == title or "") and (issue.state == state)
         ]
+        return sorted(unsorted, key=lambda issue: issue.number)
 
     def get_matching_issues(self):
         all_pipeline_issues = self.get_all_issues()
@@ -163,6 +165,10 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         print(f"publish_new_version: {assignees=}")
 
         already_exists = self.get_exact_title_match(candidate_issue_title, state="open")
+
+        if len(already_exists) > 1:
+            print("Warning: There are multiple matches for the desired issue title!")
+
         print(f"publish_new_version: {already_exists=}")
 
         if not already_exists:
