@@ -146,6 +146,11 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             issue_file.write(json.dumps(version.to_flat_dict()))
         return version, {}
 
+    def get_issue_body_from_build(self, build_metadata):
+        body = (self.issue_body_template.format(**build_metadata.__dict__),)
+        # This feels gross. Is this adding another tuple? Not sure :)
+        body += build_metadata.build_url()
+
     def get_title_from_build(self, build_metadata):
         return self.issue_title_template.format(**build_metadata.__dict__)
 
@@ -176,7 +181,6 @@ class ConcourseGithubIssuesResource(ConcourseResource):
                 title=candidate_issue_title,
                 assignees=assignees or [],
                 labels=labels or [],
-                body=self.issue_body_template.format(**build_metadata.__dict__),
             )
         else:
             working_issue = already_exists[0]
