@@ -110,21 +110,27 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     ) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
 
+        print(f"get_exact_title_match: {title=} {state=}")
         unsorted = [
             issue
             for issue in all_pipeline_issues
             if (issue.title == title or "") and (issue.state == state)
         ]
-        return sorted(unsorted, key=lambda issue: issue.number)
+        print(f"get_exact_title_match: {unsorted=}")
+        sorted_issues = sorted(unsorted, key=lambda issue: issue.number)
+        print(f"get_exact_title_match: {sorted_issues=}")
+        return sorted_issues
 
     def get_matching_issues(self):
         all_pipeline_issues = self.get_all_issues()
 
-        return [
+        matching_issues = [
             issue
             for issue in all_pipeline_issues
-            if issue.title.startswith(self.issue_prefix or "")
+            if issue.title.startswith(self.issue_prefix)
         ]
+        print(f"get_matching_issues: {matching_issues=}")
+        return matching_issues
 
     def fetch_new_versions(self, previous_version=None):
         matching_issues = self.get_matching_issues()
