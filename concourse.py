@@ -128,7 +128,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         matching_issues = [
             issue
             for issue in all_pipeline_issues
-            if issue.title.startswith(self.issue_prefix)
+            if issue.title.startswith(self.issue_prefix or "")
         ]
         print(f"get_matching_issues: {matching_issues=}")
         return matching_issues
