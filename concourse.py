@@ -111,16 +111,13 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     ) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues(issue_state=state)
 
-        print(f"get_exact_title_match: {title=} {state=}")
         unsorted = [
             issue
             for issue in all_pipeline_issues
             if (issue.title == title or "") and (issue.state == state)
         ]
 
-        print(f"get_exact_title_match: {unsorted=}")
         sorted_issues = sorted(unsorted, key=lambda issue: issue.number, reverse=True)
-        print(f"get_exact_title_match: {sorted_issues=}")
         return sorted_issues
 
     def get_matching_issues(self):
@@ -131,12 +128,10 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             for issue in all_pipeline_issues
             if issue.title.startswith(self.issue_prefix or "")
         ]
-        print(f"get_matching_issues: {matching_issues=}")
         return matching_issues
 
     def fetch_new_versions(self, previous_version=None):
         matching_issues = self.get_matching_issues()
-        print(f"fetch_new_versions: {matching_issues=}")
         sorted_issues = sorted(matching_issues, key=lambda issue: issue.number)
         try:
             previous_issue_number = previous_version.number
@@ -173,16 +168,11 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         # already exists
 
         candidate_issue_title = self.get_title_from_build(build_metadata)
-        print(f"publish_new_version: {candidate_issue_title=}")
-        print(f"publish_new_version: {labels=}")
-        print(f"publish_new_version: {assignees=}")
 
         already_exists = self.get_exact_title_match(candidate_issue_title, state="open")
 
         if len(already_exists) > 1:
             print("Warning: There are multiple matches for the desired issue title!")
-
-        print(f"publish_new_version: {already_exists=}")
 
         if not already_exists:
             working_issue = self.repo.create_issue(
