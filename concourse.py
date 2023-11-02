@@ -112,11 +112,21 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         print(f"get_exact_title_match: {list(all_pipeline_issues)=}")
 
         print(f"get_exact_title_match: {title=} {state=}")
-        unsorted = [
-            issue
-            for issue in all_pipeline_issues
-            if (issue.title == title or "") and (issue.state == state)
-        ]
+        # unsorted = [
+        #     issue
+        #     for issue in all_pipeline_issues
+        #     if (issue.title == title or "") and (issue.state == state)
+        # ]
+        unsorted = []
+        for issue in all_pipeline_issues:
+            if (issue.title == title or "") and (issue.state == state):
+                print(f"get_exact_title_match: matched! {issue.title=} {issue.state=}")
+                unsorted.append(issue)
+            else:
+                print(
+                    f"get_exact_title_match: fail: {title=} {issue.title=} {state=} {issue.state=}"
+                )
+
         print(f"get_exact_title_match: {unsorted=}")
         sorted_issues = sorted(unsorted, key=lambda issue: issue.number)
         print(f"get_exact_title_match: {sorted_issues=}")
