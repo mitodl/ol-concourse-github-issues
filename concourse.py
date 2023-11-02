@@ -100,16 +100,16 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
         return self.repo.get_issue(int(version.issue_number))
 
-    def get_all_issues(self):
-        print(f"get_all_issues: {self.issue_state=}")
-        return self.repo.get_issues(
-            state=self.issue_state, labels=self.issue_labels or []
-        )
+    def get_all_issues(self, issue_state=None):
+        if not issue_state:
+            issue_state = self.issue_state
+
+        return self.repo.get_issues(state=issue_state, labels=self.issue_labels or [])
 
     def get_exact_title_match(
         self, title: str, state: Literal["open", "closed"]
     ) -> list[Issue]:
-        all_pipeline_issues = self.get_all_issues()
+        all_pipeline_issues = self.get_all_issues(issue_state=state)
 
         print(f"get_exact_title_match: {title=} {state=}")
         # unsorted = [
