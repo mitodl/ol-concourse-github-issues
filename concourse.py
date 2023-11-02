@@ -112,23 +112,14 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         all_pipeline_issues = self.get_all_issues(issue_state=state)
 
         print(f"get_exact_title_match: {title=} {state=}")
-        # unsorted = [
-        #     issue
-        #     for issue in all_pipeline_issues
-        #     if (issue.title == title or "") and (issue.state == state)
-        # ]
-        unsorted = []
-        for issue in all_pipeline_issues:
-            if (issue.title == title or "") and (issue.state == state):
-                print(f"get_exact_title_match: matched! {issue.title=} {issue.state=}")
-                unsorted.append(issue)
-            else:
-                print(
-                    f"get_exact_title_match: fail: {title=} {issue.title=} {state=} {issue.state=}"
-                )
+        unsorted = [
+            issue
+            for issue in all_pipeline_issues
+            if (issue.title == title or "") and (issue.state == state)
+        ]
 
         print(f"get_exact_title_match: {unsorted=}")
-        sorted_issues = sorted(unsorted, key=lambda issue: issue.number)
+        sorted_issues = sorted(unsorted, key=lambda issue: issue.number, reverse=True)
         print(f"get_exact_title_match: {sorted_issues=}")
         return sorted_issues
 
@@ -199,11 +190,13 @@ class ConcourseGithubIssuesResource(ConcourseResource):
                 assignees=assignees or [],
                 labels=labels or [],
             )
+            print(f"created issue: {working_issue=}")
         else:
             working_issue = already_exists[0]
             comment_body = (
                 f"Build failed. See {build_metadata.build_url()} for details."
             )
+            print(f"about to comment on {working_issue=} with {comment_body=}")
             working_issue.create_comment(comment_body)
 
         return self._to_version(working_issue), {}
