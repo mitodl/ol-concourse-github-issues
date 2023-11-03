@@ -4,7 +4,7 @@ jobs:
   name: run-github-issue-integ
   plan:
   - get: test_pipeline_issues
-    trigger: true
+    trigger: false
   - config:
       image_resource:
         name: ""

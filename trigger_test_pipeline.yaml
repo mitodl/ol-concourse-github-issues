@@ -33,7 +33,7 @@ resource_types:
     tag: latest
   type: registry-image
 resources:
-- check_every: 24h0m0s
+- check_every: 24h
   icon: github
   name: test_pipeline_issues
   source:
