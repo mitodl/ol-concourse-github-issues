@@ -12,13 +12,26 @@ from pathlib import Path
 import textwrap
 import json
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata, ConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
+
+def build_metadata_dict(build_metadata: BuildMetadata) -> dict[str, str]:
+    return dict(
+        BUILD_URL=build_metadata.build_url(),
+        BUILD_ID=build_metadata.BUILD_ID,
+        BUILD_TEAM_NAME=build_metadata.BUILD_TEAM_NAME,
+        BUILD_NAME=build_metadata.BUILD_NAME,
+        BUILD_JOB_NAME=build_metadata.BUILD_JOB_NAME,
+        BUILD_PIPELINE_NAME=build_metadata.BUILD_PIPELINE_NAME,
+        BUILD_PIPELINE_INSTANCE_VARS=build_metadata.BUILD_PIPELINE_INSTANCE_VARS,
+        ATC_EXTERNAL_URL=build_metadata.ATC_EXTERNAL_URL,
+    )
 
 
 class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
@@ -65,10 +78,8 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         issue_title_template: str = "[bot] Pipeline {BUILD_PIPELINE_NAME} task {BUILD_JOB_NAME} completed",
         issue_body_template: str = textwrap.dedent(
             """\
-        Pipeline: {BUILD_PIPELINE_NAME}
-        Build ID: {BUILD_ID}
-        Job: {BUILD_JOB_NAME}
-        Build URL: {BUILD_URL}
+        The task {BUILD_JOB_NAME} in pipeline {BUILD_PIPELINE_NAME} has completed build number {BUILD_NAME}.
+        Please refer to [the build log]({BUILD_URL}) for details of what changes this includes.
         """
         ),
     ):
@@ -100,7 +111,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     def _from_version(self, version: ConcourseGithubIssuesVersion) -> Issue:
         return self.repo.get_issue(int(version.issue_number))
 
-    def get_all_issues(self, issue_state=None):
+    def get_all_issues(
+        self, issue_state: Optional[Literal["open", "closed"]] = None
+    ) -> list[Issue]:
         if not issue_state:
             issue_state = self.issue_state
 
@@ -120,7 +133,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         sorted_issues = sorted(unsorted, key=lambda issue: issue.number, reverse=True)
         return sorted_issues
 
-    def get_matching_issues(self):
+    def get_matching_issues(self) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
 
         matching_issues = [
@@ -130,32 +143,37 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         ]
         return matching_issues
 
-    def fetch_new_versions(self, previous_version=None):
+    def fetch_new_versions(
+        self, previous_version: Optional[ConcourseGithubIssuesVersion] = None
+    ) -> list[ConcourseGithubIssuesVersion]:
         matching_issues = self.get_matching_issues()
         sorted_issues = sorted(matching_issues, key=lambda issue: issue.number)
-        try:
+        if previous_version:
             previous_issue_number = previous_version.number
-        except AttributeError:
+        else:
             previous_issue_number = 0
         new_versions = [
             self._to_version(issue)
             for issue in sorted_issues
             if issue.number > previous_issue_number
         ]
-        return new_versions or [previous_version]
+        return new_versions or [previous_version]  # type: ignore [list-item]
 
-    def download_version(self, version, destination_dir, build_metadata):
+    def download_version(
+        self,
+        version: ConcourseGithubIssuesVersion,
+        destination_dir: str,
+        build_metadata: BuildMetadata,
+    ) -> Tuple[ConcourseGithubIssuesVersion, dict[str, str]]:
         with Path(destination_dir).joinpath("gh_issue.json").open("w") as issue_file:
             issue_file.write(json.dumps(version.to_flat_dict()))
         return version, {}
 
-    def get_issue_body_from_build(self, build_metadata):
-        body = (self.issue_body_template.format(**build_metadata.__dict__),)
-        # This feels gross. Is this adding another tuple? Not sure :)
-        body += build_metadata.build_url()
+    def get_issue_body_from_build(self, build_metadata: BuildMetadata) -> str:
+        return self.issue_body_template.format(**build_metadata_dict(build_metadata))
 
-    def get_title_from_build(self, build_metadata):
-        return self.issue_title_template.format(**build_metadata.__dict__)
+    def get_title_from_build(self, build_metadata: BuildMetadata) -> str:
+        return self.issue_title_template.format(**build_metadata_dict(build_metadata))
 
     def publish_new_version(
         self,
@@ -163,7 +181,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         build_metadata: BuildMetadata,
         assignees: Optional[list[str]] = None,
         labels: Optional[list[str]] = None,
-    ):
+    ) -> Tuple[ConcourseGithubIssuesVersion, dict[str, str]]:
         # Assume that: title is enough uniqueness to discern whether the issue
         # already exists
 

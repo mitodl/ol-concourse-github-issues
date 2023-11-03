@@ -1,9 +1,0 @@
-#!/usr/bin/env python3
-"""
-Fetch a given resource.
-"""
-from concourse import ConcourseGithubIssuesResource
-
-
-if __name__ == "__main__":
-    ConcourseGithubIssuesResource.in_main()

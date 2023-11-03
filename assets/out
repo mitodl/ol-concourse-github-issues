@@ -1,9 +1,0 @@
-#!/usr/bin/env python3
-"""
-Update a resource.
-"""
-from concourse import ConcourseGithubIssuesResource
-
-
-if __name__ == "__main__":
-    ConcourseGithubIssuesResource.out_main()
