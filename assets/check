@@ -1,9 +1,0 @@
-#!/usr/bin/env python3
-"""
-Check for new versions.
-"""
-from concourse import ConcourseGithubIssuesResource
-
-
-if __name__ == "__main__":
-    ConcourseGithubIssuesResource.check_main()
