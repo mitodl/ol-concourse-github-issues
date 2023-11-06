@@ -157,6 +157,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             for issue in sorted_issues
             if issue.number > previous_issue_number
         ]
+        print(f"fetch_new_versions: {new_versions=} {previous_version=}")
         return new_versions or [previous_version]  # type: ignore [list-item]
 
     def download_version(
