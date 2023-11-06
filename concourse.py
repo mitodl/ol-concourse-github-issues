@@ -80,6 +80,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             """\
         The task {BUILD_JOB_NAME} in pipeline {BUILD_PIPELINE_NAME} has completed build number {BUILD_NAME}.
         Please refer to [the build log]({BUILD_URL}) for details of what changes this includes.
+        Closing this issue will trigger the next job in the pipeline {BUILD_PIPELINE_NAME}.
         """
         ),
     ):
@@ -183,6 +184,8 @@ class ConcourseGithubIssuesResource(ConcourseResource):
 
         already_exists = self.get_exact_title_match(candidate_issue_title, state="open")
 
+        issue_labels = [self.repo.get_label(label) for label in labels or []]
+
         if len(already_exists) > 1:
             print("Warning: There are multiple matches for the desired issue title!")
 
@@ -190,14 +193,13 @@ class ConcourseGithubIssuesResource(ConcourseResource):
             working_issue = self.repo.create_issue(
                 title=candidate_issue_title,
                 assignees=assignees or [],
-                labels=labels or [],
+                labels=issue_labels,
+                body=self.get_issue_body_from_build(build_metadata),
             )
             print(f"created issue: {working_issue=}")
         else:
             working_issue = already_exists[0]
-            comment_body = (
-                f"Build failed. See {build_metadata.build_url()} for details."
-            )
+            comment_body = self.get_issue_body_from_build(build_metadata)
             print(f"about to comment on {working_issue=} with {comment_body=}")
             working_issue.create_comment(comment_body)
 
