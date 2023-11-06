@@ -147,18 +147,11 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         self, previous_version: Optional[ConcourseGithubIssuesVersion] = None
     ) -> list[ConcourseGithubIssuesVersion]:
         matching_issues = self.get_matching_issues()
-        sorted_issues = sorted(matching_issues, key=lambda issue: issue.number)
+        versions = [self._to_version(issue) for issue in matching_issues]
         if previous_version:
-            previous_issue_number = previous_version.number
-        else:
-            previous_issue_number = 0
-        new_versions = [
-            self._to_version(issue)
-            for issue in sorted_issues
-            if issue.number > previous_issue_number
-        ]
-        print(f"fetch_new_versions: {new_versions=} {previous_version=}")
-        return new_versions or [previous_version]  # type: ignore [list-item]
+            versions = [version for version in versions if version > previous_version]
+        print(f"fetch_new_versions: {versions=} {previous_version=}")
+        return versions or [previous_version]  # type: ignore [list-item]
 
     def download_version(
         self,
