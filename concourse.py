@@ -160,7 +160,7 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         build_metadata: BuildMetadata,
     ) -> Tuple[ConcourseGithubIssuesVersion, dict[str, str]]:
         with Path(destination_dir).joinpath("gh_issue.json").open("w") as issue_file:
-            issue_file.write(json.dumps(version or {}))
+            issue_file.write(json.dumps(version.to_flat_dict() or {}))
         return version, {}
 
     def get_issue_body_from_build(self, build_metadata: BuildMetadata) -> str:
