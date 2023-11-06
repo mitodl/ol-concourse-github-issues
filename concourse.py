@@ -149,9 +149,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         matching_issues = self.get_matching_issues()
         versions = [self._to_version(issue) for issue in matching_issues]
         if previous_version:
-            versions = [version for version in versions if version > previous_version]
+            versions = [version for version in versions if version >= previous_version]
         print(f"fetch_new_versions: {versions=} {previous_version=}")
-        return versions or [previous_version]  # type: ignore [list-item]
+        return versions
 
     def download_version(
         self,
