@@ -52,7 +52,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
         self.issue_closed_at = issue_closed_at
 
     def __lt__(self, other: "ConcourseGithubIssuesVersion"):
-        if self.issue_state == "closed":
+        if self.issue_state == other.issue_state == "closed":
             return datetime.strptime(
                 self.issue_closed_at,  # type: ignore[arg-type]
                 ISO_8601_FORMAT,
@@ -61,10 +61,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
                 ISO_8601_FORMAT,
             )
         else:
-            return datetime.strptime(
-                self.issue_created_at,
-                ISO_8601_FORMAT,
-            ) < datetime.strptime(other.issue_created_at, ISO_8601_FORMAT)
+            self.issue_number < other.issue_number
 
 
 class ConcourseGithubIssuesResource(ConcourseResource):
