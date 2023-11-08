@@ -1,5 +1,5 @@
 VERSION 0.7
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 WORKDIR /opt/resource
 
 requirements:

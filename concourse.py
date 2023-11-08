@@ -13,7 +13,8 @@ import textwrap
 import json
 from datetime import datetime
 from typing import Literal, Optional, Tuple
-from concoursetools import BuildMetadata, ConcourseResource
+from concoursetools import BuildMetadata
+from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth
 from github.Issue import Issue
@@ -64,7 +65,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
             self.issue_number < other.issue_number
 
 
-class ConcourseGithubIssuesResource(ConcourseResource):
+class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
         access_token: str,
@@ -142,14 +143,9 @@ class ConcourseGithubIssuesResource(ConcourseResource):
         ]
         return matching_issues
 
-    def fetch_new_versions(
-        self, previous_version: Optional[ConcourseGithubIssuesVersion] = None
-    ) -> list[ConcourseGithubIssuesVersion]:
+    def fetch_all_versions(self) -> set[ConcourseGithubIssuesVersion]:
         matching_issues = self.get_matching_issues()
-        versions = [self._to_version(issue) for issue in matching_issues]
-        if previous_version:
-            versions = [version for version in versions if version >= previous_version]
-        print(f"fetch_new_versions: {versions=} {previous_version=}")
+        versions = {self._to_version(issue) for issue in matching_issues}
         return versions
 
     def download_version(
