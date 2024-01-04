@@ -152,7 +152,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         self, version: ConcourseGithubIssuesVersion, build_metadata: BuildMetadata
     ):
         current_title = self.get_title_from_build(build_metadata)
-        job_number = build_metadata.BUILD_JOB_NAME
+        job_number = build_metadata.BUILD_NAME
         new_title = f"[CONSUMED #{job_number}]" + current_title
         self.repo.get_issue(int(version.issue_number)).edit(title=new_title)
 
