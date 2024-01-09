@@ -154,7 +154,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         current_title = self.get_title_from_build(build_metadata)
         job_number = build_metadata.BUILD_NAME
         new_title = f"[CONSUMED #{job_number}]" + current_title
-        print(f"About to add tombstone: {current_title=} {job_number=} {new_title=}")
         self.repo.get_issue(int(version.issue_number)).edit(title=new_title)
 
     def download_version(
