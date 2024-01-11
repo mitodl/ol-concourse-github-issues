@@ -154,7 +154,10 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         current_title = self.get_title_from_build(build_metadata)
         job_number = build_metadata.BUILD_NAME
         new_title = f"[CONSUMED #{job_number}]" + current_title
-        self.repo.get_issue(int(version.issue_number)).edit(title=new_title)
+        issue = self.repo.get_issue(int(version.issue_number))
+
+        if issue.state == "closed":
+            issue.edit(title=new_title)
 
     def download_version(
         self,
