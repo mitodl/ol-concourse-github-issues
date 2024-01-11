@@ -62,7 +62,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
                 ISO_8601_FORMAT,
             )
         else:
-            int(self.issue_number) < int(other.issue_number)
+            return int(self.issue_number) < int(other.issue_number)
 
 
 class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
