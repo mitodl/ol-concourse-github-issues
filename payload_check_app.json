@@ -1,0 +1,12 @@
+{
+  "source": {
+    "auth_method": "app",
+    "app_id": "<application id as an int>",
+    "app_installation_id": "<application installation id as an int>",
+    "private_ssh_key": "<application SSH key as string with \n here>",
+    "issue_prefix": "[bot] Pulumi ol-infrastructure-edxapp-application.mitx applications.edxapp.mitx.CI deployed.",
+    "issue_state": "closed",
+    "issue_title_template": "[bot] Pulumi ol-infrastructure-edxapp-application.mitx applications.edxapp.mitx.CI deployed.",
+    "repository": "mitodl/concourse-workflow"
+  }
+}

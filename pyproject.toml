@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ol_concourse_github_issues"
-version = "0.1.0"
+version = "0.1.1"
 description = "concourse.io resource for manipulating Github Issues"
 authors = ["Chris Patti <feoh@feoh.org>"]
 license = "MIT"
