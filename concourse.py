@@ -97,7 +97,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
                     app_installation_id
                 )
             )
-        print(self.gh.get_rate_limit().core.remaining)
         if self.gh.get_rate_limit().core.remaining == 0:
             sys.exit(1)
         self.repo = self.gh.get_repo(repository)
