@@ -22,14 +22,19 @@ labels: labels required to match
 assignees: optional assignees list to use when creating issues
 ```
 
-Documentation on setting up a personal access token can be found [here](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
-Documentation on setting up a github application can be found [here](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app), [here](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation) and [here](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps)
-
 You can find example pipeline definitions for:
 
 - [Triggering a task when a Github issue is created](trigger_test_pipeline.yaml)
 - [Creating a New Github Issue When A Task
 Completes](issue_create_test_pipeline.yaml)
+
+## App / Token Permissions
+
+- Token: `project, read:org, repo`
+- Application Installation: `Repository->Contents->Read and Write`, `Respository->Issues->Read and Write`, `Repository->Metadata->Read-only` and `Repository->Pull requests->Read and Write`
+
+Documentation on setting up a personal access token can be found [here](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
+Documentation on setting up a github application can be found [here](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app), [here](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation) and [here](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps)
 
 ## Building
 
