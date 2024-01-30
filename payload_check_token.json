@@ -1,0 +1,9 @@
+{
+  "source": {
+    "access_token": "<personal github token here>",
+    "issue_prefix": "[bot] Pulumi ol-infrastructure-edxapp-application.mitx applications.edxapp.mitx.CI deployed.",
+    "issue_state": "closed",
+    "issue_title_template": "[bot] Pulumi ol-infrastructure-edxapp-application.mitx applications.edxapp.mitx.CI deployed.",
+    "repository": "mitodl/concourse-workflow"
+  }
+}

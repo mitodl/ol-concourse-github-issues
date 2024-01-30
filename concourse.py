@@ -11,6 +11,7 @@ resources:
 from pathlib import Path
 import textwrap
 import json
+import sys
 from datetime import datetime
 from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
@@ -68,12 +69,16 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
 class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
-        access_token: str,
         repository: str,
-        issue_state: Literal["open", "closed"] = "closed",
+        access_token: Optional[str] = None,
+        app_id: Optional[int] = None,
+        app_installation_id: Optional[int] = None,
+        assignees: Optional[list[str]] = None,
         issue_prefix: Optional[str] = None,
         labels: Optional[list[str]] = None,
-        assignees: Optional[list[str]] = None,
+        private_ssh_key: Optional[str] = None,
+        auth_method: Literal["token", "app"] = "token",
+        issue_state: Literal["open", "closed"] = "closed",
         issue_title_template: str = "[bot] Pipeline {BUILD_PIPELINE_NAME} task {BUILD_JOB_NAME} completed",
         issue_body_template: str = textwrap.dedent(
             """\
@@ -84,7 +89,17 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         ),
     ):
         super().__init__(ConcourseGithubIssuesVersion)
-        self.gh = Github(auth=Auth.Token(access_token))
+        if auth_method == "token":
+            self.gh = Github(auth=Auth.Token(access_token))
+        else:
+            self.gh = Github(
+                auth=Auth.AppAuth(app_id, private_ssh_key).get_installation_auth(
+                    app_installation_id
+                )
+            )
+        print(self.gh.get_rate_limit().core.remaining)
+        if self.gh.get_rate_limit().core.remaining == 0:
+            sys.exit(1)
         self.repo = self.gh.get_repo(repository)
         self.issue_state = issue_state
         self.issue_prefix = issue_prefix
