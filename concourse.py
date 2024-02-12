@@ -98,7 +98,9 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
                 )
             )
         if self.gh.get_rate_limit().core.remaining == 0:
+            print(f"Rate limit: {self.gh.get_rate_limit()} exceeded. Exiting.")
             sys.exit(1)
+
         self.repo = self.gh.get_repo(repository)
         self.issue_state = issue_state
         self.issue_prefix = issue_prefix
