@@ -98,7 +98,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
                 )
             )
         if self.gh.get_rate_limit().core.remaining == 0:
-            print(f"Rate limit: {self.gh.get_rate_limit()} exceeded. Exiting.")
             sys.exit(1)
         self.repo = self.gh.get_repo(repository)
         self.issue_state = issue_state
@@ -132,23 +131,21 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         if not issue_state:
             issue_state = self.issue_state
 
-        return self.repo.get_issues(
-            state=issue_state, labels=self.issue_labels or [], sort="updated"
-        )
+        return self.repo.get_issues(state=issue_state, labels=self.issue_labels or [])
 
     def get_exact_title_match(
         self, title: str, state: Literal["open", "closed"]
     ) -> list[Issue]:
-        sorted_issues = self.repo.get_issues(
-            state=state, labels=self.issue_labels or [], sort="updated"
-        )
+        all_pipeline_issues = self.get_all_issues(issue_state=state)
 
-        matching_issues = []
-        for issue in sorted_issues:
-            if issue.title == title:
-                matching_issues.append(issue)
+        unsorted = [
+            issue
+            for issue in all_pipeline_issues
+            if (issue.title == title or "") and (issue.state == state)
+        ]
 
-        return matching_issues
+        sorted_issues = sorted(unsorted, key=lambda issue: issue.number, reverse=True)
+        return sorted_issues
 
     def get_matching_issues(self) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
@@ -175,7 +172,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
 
         if issue.state == "closed":
             issue.edit(title=new_title)
-            issue.add_to_labels("consumed")
 
     def download_version(
         self,
