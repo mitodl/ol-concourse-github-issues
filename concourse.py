@@ -132,13 +132,23 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         if not issue_state:
             issue_state = self.issue_state
 
-        return self.repo.get_issues(state=issue_state, labels=self.issue_labels or [], sort="updated")
+        return self.repo.get_issues(
+            state=issue_state, labels=self.issue_labels or [], sort="updated"
+        )
 
     def get_exact_title_match(
         self, title: str, state: Literal["open", "closed"]
     ) -> list[Issue]:
+        sorted_issues = self.repo.get_issues(
+            state=state, labels=self.issue_labels or [], sort="updated"
+        )
 
-        return self.repo.get_issues(state=state, labels=self.issue_labels or [], sort="updated")
+        matching_issues = []
+        for issue in sorted_issues:
+            if issue.title == title:
+                matching_issues.append(issue)
+
+        return matching_issues
 
     def get_matching_issues(self) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
