@@ -69,6 +69,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
 class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
+        base_url: str,
         repository: str,
         access_token: Optional[str] = None,
         app_id: Optional[int] = None,
@@ -90,12 +91,13 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     ):
         super().__init__(ConcourseGithubIssuesVersion)
         if auth_method == "token":
-            self.gh = Github(auth=Auth.Token(access_token))
+            self.gh = Github(base_url, auth=Auth.Token(access_token))
         else:
             self.gh = Github(
+                base_url,
                 auth=Auth.AppAuth(app_id, private_ssh_key).get_installation_auth(
                     app_installation_id
-                )
+                ),
             )
         if self.gh.get_rate_limit().core.remaining == 0:
             print(f"Rate limit: {self.gh.get_rate_limit()} exceeded. Exiting.")
