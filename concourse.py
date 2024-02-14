@@ -19,7 +19,7 @@ from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth
 from github.Issue import Issue
-from github.Constants import DEFAULT_BASE_URL
+from github.Consts import DEFAULT_BASE_URL
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
