@@ -70,7 +70,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
         repository: str,
-        base_url: str = "",
+        base_url: Optional[str] = None,
         access_token: Optional[str] = None,
         app_id: Optional[int] = None,
         app_installation_id: Optional[int] = None,
