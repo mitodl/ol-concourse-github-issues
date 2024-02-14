@@ -69,8 +69,8 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
 class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
-        base_url: str,
         repository: str,
+        base_url: str = "https://api.github.com/api/v3",
         access_token: Optional[str] = None,
         app_id: Optional[int] = None,
         app_installation_id: Optional[int] = None,
