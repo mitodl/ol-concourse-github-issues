@@ -17,7 +17,7 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth, enable_console_debug_logging
+from github import Github, Auth
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -70,7 +70,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
         repository: str,
-        base_url: Optional[str] = None,
         access_token: Optional[str] = None,
         app_id: Optional[int] = None,
         app_installation_id: Optional[int] = None,
@@ -90,21 +89,16 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         ),
     ):
         super().__init__(ConcourseGithubIssuesVersion)
-        print(f"concourse.py: {base_url=}")
-        enable_console_debug_logging()
         if auth_method == "token":
-            self.gh = Github(base_url, auth=Auth.Token(access_token))
+            self.gh = Github(auth=Auth.Token(access_token))
         else:
             self.gh = Github(
-                base_url,
                 auth=Auth.AppAuth(app_id, private_ssh_key).get_installation_auth(
                     app_installation_id
-                ),
+                )
             )
         if self.gh.get_rate_limit().core.remaining == 0:
-            print(f"Rate limit: {self.gh.get_rate_limit()} exceeded. Exiting.")
             sys.exit(1)
-
         self.repo = self.gh.get_repo(repository)
         self.issue_state = issue_state
         self.issue_prefix = issue_prefix
