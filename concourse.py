@@ -17,7 +17,7 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth
+from github import Github, Auth, enable_console_debug_logging
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -99,6 +99,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
                     app_installation_id
                 ),
             )
+        enable_console_debug_logging()
         if self.gh.get_rate_limit().core.remaining == 0:
             print(f"Rate limit: {self.gh.get_rate_limit()} exceeded. Exiting.")
             sys.exit(1)
