@@ -90,6 +90,8 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         ),
     ):
         super().__init__(ConcourseGithubIssuesVersion)
+        print(f"concourse.py: {base_url=}")
+        enable_console_debug_logging()
         if auth_method == "token":
             self.gh = Github(base_url, auth=Auth.Token(access_token))
         else:
@@ -99,7 +101,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
                     app_installation_id
                 ),
             )
-        enable_console_debug_logging()
         if self.gh.get_rate_limit().core.remaining == 0:
             print(f"Rate limit: {self.gh.get_rate_limit()} exceeded. Exiting.")
             sys.exit(1)
