@@ -17,7 +17,7 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth
+from github import Github, Auth, enable_console_debug_logging
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -89,6 +89,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         ),
     ):
         super().__init__(ConcourseGithubIssuesVersion)
+        enable_console_debug_logging()
         if auth_method == "token":
             self.gh = Github(auth=Auth.Token(access_token))
         else:
