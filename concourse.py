@@ -17,7 +17,12 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth, enable_console_debug_logging
+from github import (
+    Github,
+    Auth,
+    enable_console_debug_logging,
+    disable_console_debug_logging,
+)
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -100,6 +105,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
             )
         if self.gh.get_rate_limit().core.remaining == 0:
             sys.exit(1)
+        disable_console_debug_logging()
         self.repo = self.gh.get_repo(repository)
         self.issue_state = issue_state
         self.issue_prefix = issue_prefix
