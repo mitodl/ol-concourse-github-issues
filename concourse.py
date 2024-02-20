@@ -17,7 +17,7 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth
+from github import Github, Auth, Consts
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -70,6 +70,8 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def __init__(
         self,
         repository: str,
+        /,
+        gh_host: str = Consts.DEFAULT_BASE_URL,
         access_token: Optional[str] = None,
         app_id: Optional[int] = None,
         app_installation_id: Optional[int] = None,
@@ -90,9 +92,10 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     ):
         super().__init__(ConcourseGithubIssuesVersion)
         if auth_method == "token":
-            self.gh = Github(auth=Auth.Token(access_token))
+            self.gh = Github(base_url=gh_host, auth=Auth.Token(access_token))
         else:
             self.gh = Github(
+                base_url=gh_host,
                 auth=Auth.AppAuth(app_id, private_ssh_key).get_installation_auth(
                     app_installation_id
                 )
