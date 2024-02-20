@@ -92,14 +92,10 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     ):
         super().__init__(ConcourseGithubIssuesVersion)
         if auth_method == "token":
-            self.gh = Github(base_url=gh_host, auth=Auth.Token(access_token))
+            auth = self.auth_token(access_token)
         else:
-            self.gh = Github(
-                base_url=gh_host,
-                auth=Auth.AppAuth(app_id, private_ssh_key).get_installation_auth(
-                    app_installation_id
-                )
-            )
+            auth = self.auth_app(app_id, app_installation_id, private_ssh_key)
+        self.gh = Github(base_url=gh_host, auth=auth)
         if self.gh.get_rate_limit().core.remaining == 0:
             sys.exit(1)
 
@@ -111,6 +107,14 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         self.assignees = assignees
         self.issue_title_template = issue_title_template
         self.issue_body_template = issue_body_template
+
+    def auth_token(self, access_token):
+        return Auth.Token(access_token)
+
+    def auth_app(self, app_id, app_installation_id, private_ssh_key):
+        return Auth.AppAuth(app_id, private_ssh_key).get_installation_auth(
+            app_installation_id
+        )
 
     def _to_version(self, gh_issue: Issue) -> ConcourseGithubIssuesVersion:
         if gh_issue.state == "closed":
