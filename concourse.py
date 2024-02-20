@@ -17,7 +17,7 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
-from github import Github, Auth, Consts
+from github import Github, Auth, Consts, GithubException
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -96,8 +96,13 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         else:
             auth = self.auth_app(app_id, app_installation_id, private_ssh_key)
         self.gh = Github(base_url=gh_host, auth=auth)
-        if self.gh.get_rate_limit().core.remaining == 0:
-            sys.exit(1)
+        try:
+            curr_limit = self.gh.get_rate_limit()
+            if curr_limit.core.remaining == 0:
+                sys.exit(1)
+        except GithubException:
+            # Rate limiting is not enabled
+            curr_limit = None
 
         self.repo = self.gh.get_repo(repository)
         self.issue_state = issue_state
