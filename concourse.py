@@ -79,6 +79,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         issue_prefix: Optional[str] = None,
         labels: Optional[list[str]] = None,
         private_ssh_key: Optional[str] = None,
+        limit_old_versions: Optional[int] = None,
         auth_method: Literal["token", "app"] = "token",
         issue_state: Literal["open", "closed"] = "closed",
         issue_title_template: str = "[bot] Pipeline {BUILD_PIPELINE_NAME} task {BUILD_JOB_NAME} completed",
@@ -95,7 +96,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
             auth = self.auth_token(access_token)
         else:
             auth = self.auth_app(app_id, app_installation_id, private_ssh_key)
-        self.gh = Github(base_url=gh_host, auth=auth)
+        self.gh = Github(base_url=gh_host, auth=auth, per_page=100)
         try:
             curr_limit = self.gh.get_rate_limit()
             if curr_limit.core.remaining == 0:
@@ -112,6 +113,7 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         self.assignees = assignees
         self.issue_title_template = issue_title_template
         self.issue_body_template = issue_body_template
+        self.limit_old_versions = limit_old_versions
 
     def auth_token(self, access_token):
         return Auth.Token(access_token)
@@ -143,7 +145,6 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     ) -> list[Issue]:
         if not issue_state:
             issue_state = self.issue_state
-
         return self.repo.get_issues(state=issue_state, labels=self.issue_labels or [])
 
     def get_exact_title_match(
@@ -163,11 +164,12 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
     def get_matching_issues(self) -> list[Issue]:
         all_pipeline_issues = self.get_all_issues()
 
-        matching_issues = [
-            issue
-            for issue in all_pipeline_issues
-            if issue.title.startswith(self.issue_prefix or "")
-        ]
+        matching_issues = []
+        for issue in all_pipeline_issues:
+            if issue.title.startswith(self.issue_prefix or ""):
+                matching_issues.append(issue)
+                if self.limit_old_versions and len(matching_issues) == self.limit_old_versions:
+                    break
         return matching_issues
 
     def fetch_all_versions(self) -> set[ConcourseGithubIssuesVersion]:
