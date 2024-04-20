@@ -16,7 +16,7 @@ PyGithub = "^2.0.0"
 pytest = "^8.0.0"
 pre-commit = "^3.4.0"
 mypy = "^1.6.1"
-ruff = "^0.3.0"
+ruff = "^0.4.0"
 
 [build-system]
 requires = ["poetry-core"]
