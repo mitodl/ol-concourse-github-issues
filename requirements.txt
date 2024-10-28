@@ -163,7 +163,7 @@ charset-normalizer==3.3.2 ; python_version >= "3.11" and python_version < "4.0" 
 concoursetools==0.7.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:7c80adee5ae6c4bc1ca1bc08fb391a2664ffd5a2a9d9f0ea3ae82551fb06cf5f \
     --hash=sha256:991ec7b74807030c98612685e23c1ddcc2f87e2087a51cc1754806490675ca81
-cryptography==42.0.8; python_version >= "3.11" and python_version < "4.0" \
+cryptography==43.0.1; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:013629ae70b40af70c9a7a5db40abe5d9054e6f4380e50ce769947b73bf3caad \
     --hash=sha256:2346b911eb349ab547076f47f2e035fc8ff2c02380a7cbbf8d87114fa0f1c583 \
     --hash=sha256:2f66d9cd9147ee495a8374a45ca445819f8929a3efcd2e3df6428e46c3cbb10b \
