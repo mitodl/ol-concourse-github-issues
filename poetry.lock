@@ -228,13 +228,13 @@ files = [
 
 [[package]]
 name = "concoursetools"
-version = "0.7.1"
+version = "0.8.0"
 description = "Easily create Concourse resource types in Python."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "concoursetools-0.7.1-py3-none-any.whl", hash = "sha256:7c80adee5ae6c4bc1ca1bc08fb391a2664ffd5a2a9d9f0ea3ae82551fb06cf5f"},
-    {file = "concoursetools-0.7.1.tar.gz", hash = "sha256:991ec7b74807030c98612685e23c1ddcc2f87e2087a51cc1754806490675ca81"},
+    {file = "concoursetools-0.8.0-py3-none-any.whl", hash = "sha256:beb628e44a0bdd2d2f880d5d81ade8804e66962127b6735e87e10d3e45df47a8"},
+    {file = "concoursetools-0.8.0.tar.gz", hash = "sha256:6778fe55eeb78f869965dac29fe2026389c89d47c433bc2347be68e3b734797b"},
 ]
 
 [[package]]
@@ -839,4 +839,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "26295bcb3004ba15634d60b3ff32ac8107d5cc0b518be6602c76ba8952125446"
+content-hash = "5b9275ef72b878fc7dc12a49f208df2fe246d0c448bd42366eb34d06bf9f3e70"
