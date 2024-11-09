@@ -9,7 +9,7 @@ packages = [{include = "ol_concourse_github_issues"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-concoursetools = "^0.7.1"
+concoursetools = "^0.8.0"
 PyGithub = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
