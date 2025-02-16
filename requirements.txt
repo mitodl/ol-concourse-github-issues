@@ -207,9 +207,9 @@ idna==3.10; python_version >= "3.11" and python_version < "4.0" \
 pycparser==2.22; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6 \
     --hash=sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc
-PyGithub==2.5.0; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:b0b635999a658ab8e08720bdd3318893ff20e2275f6446fcf35bf3f44f2c0fd2 \
-    --hash=sha256:e1613ac508a9be710920d26eb18b1905ebd9926aa49398e88151c1b526aad3cf
+PyGithub==2.6.0; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:04784fd6f4acfcaf91df5d3f08ef14153709395a34e706850f92337d9914548f \
+    --hash=sha256:22635b245b885413c607bb86393603cadcfdcb67a9b81ce9a64634e64f308084
 PyJWT[crypto]==2.10.1; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:3cc5772eb20009233caf06e9d8a0577824723b44e6648ee0a2aedb6cf9381953 \
     --hash=sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb
