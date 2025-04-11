@@ -12,7 +12,7 @@ from pathlib import Path
 import textwrap
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata
 from concoursetools.additional import SelfOrganisingConcourseResource
@@ -141,11 +141,16 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         return self.repo.get_issue(int(version.issue_number))
 
     def get_all_issues(
-        self, issue_state: Optional[Literal["open", "closed"]] = None
+        self,
+        issue_state: Optional[Literal["open", "closed"]] = None,
+        since: Optional[datetime] = None,
     ) -> list[Issue]:
         if not issue_state:
             issue_state = self.issue_state
-        return self.repo.get_issues(state=issue_state, labels=self.issue_labels or [])
+        # Pass since=None if not provided, which PyGithub handles correctly
+        return self.repo.get_issues(
+            state=issue_state, labels=self.issue_labels or [], since=since
+        )
 
     def get_exact_title_match(
         self, title: str, state: Literal["open", "closed"]
@@ -161,20 +166,51 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         sorted_issues = sorted(unsorted, key=lambda issue: issue.number, reverse=True)
         return sorted_issues
 
-    def get_matching_issues(self) -> list[Issue]:
-        all_pipeline_issues = self.get_all_issues()
+    def get_matching_issues(self, since: Optional[datetime] = None) -> list[Issue]:
+        all_pipeline_issues = self.get_all_issues(since=since)
 
         matching_issues = []
         for issue in all_pipeline_issues:
             if issue.title.startswith(self.issue_prefix or ""):
                 matching_issues.append(issue)
-                if self.limit_old_versions and len(matching_issues) == self.limit_old_versions:
+                if (
+                    self.limit_old_versions
+                    and len(matching_issues) == self.limit_old_versions
+                ):
                     break
+        # Sort by number ascending to process oldest first if limited
+        matching_issues.sort(key=lambda issue: issue.number)
         return matching_issues
 
-    def fetch_all_versions(self) -> set[ConcourseGithubIssuesVersion]:
-        matching_issues = self.get_matching_issues()
+    def fetch_new_versions(
+        self, previous_version: Optional[ConcourseGithubIssuesVersion] = None
+    ) -> set[ConcourseGithubIssuesVersion]:
+        """Fetch new versions since the previous one."""
+        since_datetime: Optional[datetime] = None
+        if previous_version:
+            timestamp_str: Optional[str] = None
+            if self.issue_state == "closed":
+                timestamp_str = previous_version.issue_closed_at
+            elif self.issue_state == "open":
+                timestamp_str = previous_version.issue_created_at
+
+            if timestamp_str:
+                try:
+                    # Add a small buffer (1 second) to avoid potential clock skew issues
+                    # or fetching the exact same event again.
+                    since_datetime = datetime.strptime(
+                        timestamp_str, ISO_8601_FORMAT
+                    ) + timedelta(seconds=1)
+                except ValueError:
+                    # Handle cases where the timestamp might be invalid
+                    print(f"Warning: Could not parse timestamp {timestamp_str}")
+                    pass  # Proceed without 'since' if parsing fails
+
+        matching_issues = self.get_matching_issues(since=since_datetime)
         versions = {self._to_version(issue) for issue in matching_issues}
+        # Filter out the previous_version itself if it happens to be included
+        if previous_version and previous_version in versions:
+            versions.remove(previous_version)
         return versions
 
     def tombstone_version(
@@ -183,9 +219,11 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         current_title = self.get_title_from_build(build_metadata)
         job_number = build_metadata.BUILD_NAME
         new_title = f"[CONSUMED #{job_number}]" + current_title
-        issue = self.repo.get_issue(int(version.issue_number))
 
-        if issue.state == "closed":
+        # Check state from the version data first
+        if version.issue_state == "closed":
+            # Fetch the issue object only when we know we need to edit it
+            issue = self.repo.get_issue(int(version.issue_number))  # API Call 1
             issue.edit(title=new_title)
 
     def download_version(
@@ -217,20 +255,25 @@ class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
         # Assume that: title is enough uniqueness to discern whether the issue
         # already exists
 
+        # Use GitHub Search API for efficiency instead of listing all issues
         candidate_issue_title = self.get_title_from_build(build_metadata)
-
-        already_exists = self.get_exact_title_match(candidate_issue_title, state="open")
-
-        issue_labels = [self.repo.get_label(label) for label in labels or []]
+        # Ensure title is properly quoted for the search query
+        safe_title = candidate_issue_title.replace('"', '\\"')
+        query = (
+            f'repo:{self.repo.full_name} state:open "{safe_title}" in:title is:issue'
+        )
+        search_results = self.gh.search_issues(query)
+        already_exists = list(search_results)  # Evaluate the PaginatedList
 
         if len(already_exists) > 1:
             print("Warning: There are multiple matches for the desired issue title!")
 
         if not already_exists:
+            # Pass label names (strings) directly, avoid fetching Label objects
             working_issue = self.repo.create_issue(
                 title=candidate_issue_title,
                 assignees=assignees or [],
-                labels=issue_labels,
+                labels=labels or [],  # Pass list of strings
                 body=self.get_issue_body_from_build(build_metadata),
             )
             print(f"created issue: {working_issue=}")
