@@ -14,8 +14,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 from typing import Literal, Optional, Tuple
-from concoursetools import BuildMetadata
-from concoursetools.additional import SelfOrganisingConcourseResource
+from concoursetools import BuildMetadata, ConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth, Consts, GithubException
 from github.Issue import Issue
@@ -66,7 +65,7 @@ class ConcourseGithubIssuesVersion(Version, SortableVersionMixin):
             return int(self.issue_number) < int(other.issue_number)
 
 
-class ConcourseGithubIssuesResource(SelfOrganisingConcourseResource):
+class ConcourseGithubIssuesResource(ConcourseResource):
     def __init__(
         self,
         /,
