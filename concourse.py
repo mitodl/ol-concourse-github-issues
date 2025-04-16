@@ -17,6 +17,7 @@ from typing import Literal, Optional, Tuple
 from concoursetools import BuildMetadata, ConcourseResource
 from concoursetools.version import Version, SortableVersionMixin
 from github import Github, Auth, Consts, GithubException
+from github.GithubObject import NotSet
 from github.Issue import Issue
 
 ISO_8601_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -146,9 +147,10 @@ class ConcourseGithubIssuesResource(ConcourseResource):
     ) -> list[Issue]:
         if not issue_state:
             issue_state = self.issue_state
-        # Pass since=None if not provided, which PyGithub handles correctly
+        # Pass NotSet if since is None, as PyGithub expects this sentinel value
+        since_param = since if since is not None else NotSet
         return self.repo.get_issues(
-            state=issue_state, labels=self.issue_labels or [], since=since
+            state=issue_state, labels=self.issue_labels or [], since=since_param
         )
 
     def get_exact_title_match(
