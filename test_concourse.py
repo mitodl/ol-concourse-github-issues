@@ -1,3 +1,4 @@
+from github.GithubObject import NotSet
 import pytest
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
@@ -7,8 +8,36 @@ from concourse import (
     ConcourseGithubIssuesVersion,
     ISO_8601_FORMAT,
 )
+from concoursetools import BuildMetadata  # Import the actual class
 from concoursetools.testing import SimpleTestResourceWrapper
 from github.Issue import Issue
+
+
+# Helper function to create mock BuildMetadata objects
+def mock_build_metadata(**kwargs) -> BuildMetadata:
+    """Creates a BuildMetadata object with default values, allowing overrides."""
+    defaults = {
+        "BUILD_ID": "12345",
+        "BUILD_NAME": "42",
+        "BUILD_JOB_NAME": "test-job",
+        "BUILD_PIPELINE_NAME": "test-pipeline",
+        "BUILD_PIPELINE_INSTANCE_VARS": '{"var": "value"}',
+        "BUILD_TEAM_NAME": "main",
+        "ATC_EXTERNAL_URL": "http://concourse.example.com",
+    }
+    # Map simplified kwargs to the expected BuildMetadata keys
+    key_map = {
+        "pipeline_name": "BUILD_PIPELINE_NAME",
+        "job_name": "BUILD_JOB_NAME",
+        "build_name": "BUILD_NAME",
+        # Add other mappings if needed
+    }
+    mapped_kwargs = {key_map.get(k, k): v for k, v in kwargs.items()}
+
+    # Override defaults with provided mapped kwargs
+    defaults.update(mapped_kwargs)
+    # Create BuildMetadata instance using the combined dict
+    return BuildMetadata(**defaults)
 
 
 # Helper function to create mock Issue objects
@@ -90,6 +119,9 @@ def mock_github():
     with patch("concourse.Github") as MockGithub:
         mock_gh_instance = MockGithub.return_value
         mock_repo = MagicMock()
+        mock_repo.full_name = (
+            "test/repo"
+        )  # Set the full_name attribute for search queries
         mock_gh_instance.get_repo.return_value = mock_repo
         # Set a default rate limit mock to avoid errors
         mock_rate_limit = MagicMock()
@@ -132,7 +164,7 @@ def test_fetch_new_versions_no_previous(
     assert version_numbers == expected_issue_numbers
     # Verify get_issues was called with the correct state and no 'since'
     mock_repo.get_issues.assert_called_once_with(
-        state=config_state, labels=[], since=None
+        state=config_state, labels=[], since=NotSet
     )
 
 
@@ -318,8 +350,169 @@ def test_fetch_new_versions_limit_old(mock_github):
     # get_matching_issues sorts by number ascending: 1, 5, 6, 7, 8, 9
     # limit_old_versions=2 takes the first 2: 1, 5
     assert version_numbers == {1, 5}
-    mock_repo.get_issues.assert_called_once_with(state="closed", labels=[], since=None)
+    mock_repo.get_issues.assert_called_once_with(
+        state="closed", labels=[], since=NotSet
+    )
 
 
-# TODO: Add tests for download_version (tombstoning) and publish_new_version (creation/commenting)
-# These would require mocking issue.edit(), issue.create_comment(), repo.create_issue(), gh.search_issues() etc.
+@patch("pathlib.Path.open")
+def test_download_version_tombstones(mock_open, mock_github, tmp_path):
+    """Test that download_version tombstones the issue and writes the file."""
+    mock_gh_instance, mock_repo = mock_github
+    mock_issue = create_mock_issue(
+        number=5,
+        title="[bot] Ready Issue",
+        state="closed",
+        created_at=T_MINUS_2,
+        closed_at=T_MINUS_1,
+    )
+    mock_repo.get_issue.return_value = mock_issue
+
+    resource = ConcourseGithubIssuesResource(
+        repository="test/repo", access_token="dummy_token", issue_state="closed"
+    )
+    # wrapper = SimpleTestResourceWrapper(resource) # Wrapper not needed for download test
+
+    version_to_download = ConcourseGithubIssuesVersion(
+        issue_number=5,
+        issue_title="[bot] Ready Issue",
+        issue_state="closed",
+        issue_created_at=T_MINUS_2.strftime(ISO_8601_FORMAT),
+        issue_closed_at=T_MINUS_1.strftime(ISO_8601_FORMAT),
+        issue_url="http://example.com/issue/5",
+    )
+
+    build_meta = mock_build_metadata()  # Use default build meta here
+    dest_dir = str(tmp_path)
+
+    # Call download_version directly on the resource instance
+    returned_version, returned_metadata = resource.download_version(
+        version=version_to_download,
+        destination_dir=dest_dir,
+        build_metadata=build_meta,
+    )
+
+    # Check tombstoning
+    # Need to update the expected title based on the default build_meta name '42'
+    mock_repo.get_issue.assert_called_once_with(5)
+    # Calculate the expected title exactly how the resource does it
+    current_title_from_build = resource.get_title_from_build(build_meta)
+    expected_tombstone_title = (
+        f"[CONSUMED #{build_meta.BUILD_NAME}]" + current_title_from_build
+    )
+    mock_issue.edit.assert_called_once_with(title=expected_tombstone_title)
+    # Check file writing
+    # expected_file_path = Path(dest_dir) / "gh_issue.json" # This path wasn't used, just verify open call
+    mock_open.assert_called_once_with("w")
+    # Check that the file handle's write method was called (actual content check is tricky with mock_open)
+    mock_open.return_value.__enter__.return_value.write.assert_called_once()
+
+    # Check return values
+    assert returned_version == version_to_download
+    assert returned_metadata == {}
+
+
+def test_publish_new_version_creates_new_issue(mock_github):
+    """Test publish creates a new issue when none exists."""
+    mock_gh_instance, mock_repo = mock_github
+    mock_gh_instance.search_issues.return_value = []  # No existing issue found
+    created_mock_issue = create_mock_issue(
+        number=10,
+        title="[bot] Pipeline my-pipeline task my-job completed",
+        state="open",
+        created_at=NOW,
+    )
+    mock_repo.create_issue.return_value = created_mock_issue
+
+    resource = ConcourseGithubIssuesResource(
+        repository="test/repo",
+        access_token="dummy_token",
+        issue_state="open",  # Important for publish logic
+        issue_title_template="[bot] Pipeline {BUILD_PIPELINE_NAME} task {BUILD_JOB_NAME} completed",
+        issue_body_template="Build {BUILD_NAME} finished.",
+        assignees=["user1"],
+        labels=["bot-created"],
+    )
+    # wrapper = SimpleTestResourceWrapper(resource) # Wrapper not needed for publish tests
+    build_meta = mock_build_metadata(
+        pipeline_name="my-pipeline", job_name="my-job", build_name="b123"
+    )
+
+    # Use resource directly for publish, wrapper doesn't have it
+    version, metadata = resource.publish_new_version(
+        sources_dir="dummy",
+        build_metadata=build_meta,
+        assignees=["user1"],  # Pass explicitly if needed by method
+        labels=["bot-created"],
+    )
+
+    # Check search was called
+    expected_title = "[bot] Pipeline my-pipeline task my-job completed"
+    expected_query = f'repo:test/repo state:open "{expected_title}" in:title is:issue'
+    mock_gh_instance.search_issues.assert_called_once_with(expected_query)
+
+    # Check create_issue was called
+    expected_body = "Build b123 finished."
+    mock_repo.create_issue.assert_called_once_with(
+        title=expected_title,
+        assignees=["user1"],
+        labels=["bot-created"],
+        body=expected_body,
+    )
+
+    # Check returned version
+    assert version.issue_number == 10
+    assert version.issue_title == expected_title
+    assert version.issue_state == "open"
+    assert metadata == {}
+
+
+def test_publish_new_version_comments_on_existing(mock_github):
+    """Test publish comments on an existing issue if found."""
+    mock_gh_instance, mock_repo = mock_github
+    existing_mock_issue = create_mock_issue(
+        number=9,
+        title="[bot] Pipeline my-pipeline task my-job completed",
+        state="open",
+        created_at=T_MINUS_1,
+    )
+    # Mock the create_comment method on the existing issue
+    existing_mock_issue.create_comment = MagicMock()
+    mock_gh_instance.search_issues.return_value = [
+        existing_mock_issue
+    ]  # Found existing
+
+    resource = ConcourseGithubIssuesResource(
+        repository="test/repo",
+        access_token="dummy_token",
+        issue_state="open",
+        issue_title_template="[bot] Pipeline {BUILD_PIPELINE_NAME} task {BUILD_JOB_NAME} completed",
+        issue_body_template="Build {BUILD_NAME} finished.",
+    )
+    # wrapper = SimpleTestResourceWrapper(resource) # Wrapper not needed for publish tests
+    build_meta = mock_build_metadata(
+        pipeline_name="my-pipeline", job_name="my-job", build_name="b456"
+    )
+
+    # Use resource directly for publish
+    version, metadata = resource.publish_new_version(
+        sources_dir="dummy", build_metadata=build_meta
+    )
+
+    # Check search was called
+    expected_title = "[bot] Pipeline my-pipeline task my-job completed"
+    expected_query = f'repo:test/repo state:open "{expected_title}" in:title is:issue'
+    mock_gh_instance.search_issues.assert_called_once_with(expected_query)
+
+    # Check create_issue was NOT called
+    mock_repo.create_issue.assert_not_called()
+
+    # Check create_comment was called on the existing issue
+    expected_comment_body = "Build b456 finished."
+    existing_mock_issue.create_comment.assert_called_once_with(expected_comment_body)
+
+    # Check returned version matches the existing issue
+    assert version.issue_number == 9
+    assert version.issue_title == expected_title
+    assert version.issue_state == "open"
+    assert metadata == {}
