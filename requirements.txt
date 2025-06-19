@@ -28,7 +28,7 @@ requests==2.32.4
     # via pygithub
 typing-extensions==4.14.0
     # via pygithub
-urllib3==2.3.0
+urllib3==2.5.0
     # via
     #   pygithub
     #   requests
