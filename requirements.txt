@@ -16,7 +16,7 @@ deprecated==1.2.18
     # via pygithub
 idna==3.10
     # via requests
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pygithub==2.8.1
     # via ol-concourse-github-issues
