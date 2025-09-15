@@ -10,7 +10,7 @@ charset-normalizer==3.4.3
     # via requests
 concoursetools==0.8.0
     # via ol-concourse-github-issues
-cryptography==44.0.3
+cryptography==45.0.7
     # via pyjwt
 deprecated==1.2.18
     # via pygithub
