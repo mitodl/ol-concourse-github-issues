@@ -8,7 +8,7 @@ cffi==1.17.1
     #   pynacl
 charset-normalizer==3.4.3
     # via requests
-concoursetools==0.8.0
+concoursetools==0.8.1
     # via ol-concourse-github-issues
 cryptography==44.0.3
     # via pyjwt
