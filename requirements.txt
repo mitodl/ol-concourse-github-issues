@@ -14,7 +14,7 @@ cryptography==44.0.3
     # via pyjwt
 deprecated==1.2.18
     # via pygithub
-idna==3.10
+idna==3.11
     # via requests
 pycparser==2.23
     # via cffi
