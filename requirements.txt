@@ -2,7 +2,7 @@
 #    uv export --no-dev --no-hashes --no-emit-project -o requirements.txt
 certifi==2025.11.12
     # via requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
