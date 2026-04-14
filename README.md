@@ -1,3 +1,6 @@
+> [!WARNING]
+> **This repository is archived.** Development has moved to [mitodl/ol-concourse](https://github.com/mitodl/ol-concourse/tree/main/resources/github-issues). Please use that repository instead.
+
 # ol-concourse-github-issues
 A Concourse resource to manipulate Github Issues
 
